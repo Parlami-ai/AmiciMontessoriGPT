@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from supabase import create_client
 import openai
 import os
@@ -19,11 +19,11 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
 
 # Flask app
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 CORS(app)
 
 # Log each chat message
-def log_chat(user_msg, bot_response, school_id="beibei", session_id="anonymous"):
+def log_chat(user_msg, bot_response, school_id="amici", session_id="anonymous"):
     try:
         supabase.table("chat_logs").insert({
             "timestamp": datetime.utcnow().isoformat(),
@@ -58,7 +58,7 @@ def chat():
         bot_reply = messages.data[0].content[0].text.value
 
         # Log to Supabase
-        log_chat(user_msg, bot_reply, school_id="beibei", session_id=session_id)
+        log_chat(user_msg, bot_reply, school_id="amici", session_id=session_id)
 
         return jsonify({"response": bot_reply})
 
@@ -66,11 +66,10 @@ def chat():
         print(f"Error: {e}")
         return jsonify({"error": "Something went wrong."}), 500
 
-# ✅ Added root route to handle Render or browser visits to /
+# ✅ Serve chatbot.html on root
 @app.route("/")
 def index():
-    return "Beibei Amigos Chatbot is live!"
+    return render_template("chatbot.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
-
